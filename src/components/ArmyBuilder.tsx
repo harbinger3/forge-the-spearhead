@@ -20,7 +20,17 @@ const factions = {
           points: 115,
           stats: "M6 WS2+ BS2+ S4 T4 W5 A4 Ld9 Sv2+",
           wargear: ["Storm bolter", "Power fist"],
-          abilities: ["Deep Strike", "Rites of Battle"]
+          abilities: ["Deep Strike", "Rites of Battle"],
+          loadouts: [
+            { id: "standard", name: "Standard Loadout", wargear: ["Storm bolter", "Power fist"] },
+            { id: "melee", name: "Melee Focus", wargear: ["Storm bolter", "Thunder hammer"] },
+            { id: "ranged", name: "Ranged Focus", wargear: ["Combi-melta", "Power fist"] }
+          ],
+          wargearOptions: [
+            { id: "relic-blade", name: "Relic Blade", points: 10 },
+            { id: "digital-weapons", name: "Digital Weapons", points: 5 },
+            { id: "iron-halo", name: "Iron Halo", points: 15 }
+          ]
         },
         {
           id: "librarian",
@@ -28,7 +38,16 @@ const factions = {
           points: 90,
           stats: "M6 WS3+ BS3+ S4 T4 W4 A3 Ld9 Sv3+",
           wargear: ["Force weapon", "Bolt pistol"],
-          abilities: ["Psychic Powers", "Know No Fear"]
+          abilities: ["Psychic Powers", "Know No Fear"],
+          loadouts: [
+            { id: "standard", name: "Standard Loadout", wargear: ["Force weapon", "Bolt pistol"] },
+            { id: "terminator", name: "Terminator Armour", wargear: ["Force weapon", "Storm bolter"] }
+          ],
+          wargearOptions: [
+            { id: "psychic-hood", name: "Psychic Hood", points: 10 },
+            { id: "force-axe", name: "Force Axe", points: 5 },
+            { id: "jump-pack", name: "Jump Pack", points: 20 }
+          ]
         }
       ],
       troops: [
@@ -41,7 +60,12 @@ const factions = {
           unitCost: 20,
           stats: "M6 WS3+ BS3+ S4 T4 W2 A2 Ld7 Sv3+",
           wargear: ["Bolt rifle", "Frag & Krak grenades"],
-          abilities: ["Combat Squads", "Rapid Fire"]
+          abilities: ["Combat Squads", "Rapid Fire"],
+          loadouts: [
+            { id: "standard", name: "Bolt Rifles", wargear: ["Bolt rifle", "Frag & Krak grenades"] },
+            { id: "auto", name: "Auto Bolt Rifles", wargear: ["Auto bolt rifle", "Frag & Krak grenades"] },
+            { id: "stalker", name: "Stalker Bolt Rifles", wargear: ["Stalker bolt rifle", "Frag & Krak grenades"] }
+          ]
         },
         {
           id: "tactical",
@@ -52,7 +76,12 @@ const factions = {
           unitCost: 18,
           stats: "M6 WS3+ BS3+ S4 T4 W1 A1 Ld7 Sv3+",
           wargear: ["Boltgun", "Frag & Krak grenades"],
-          abilities: ["Combat Squads", "Bolter Discipline"]
+          abilities: ["Combat Squads", "Bolter Discipline"],
+          loadouts: [
+            { id: "standard", name: "Boltguns", wargear: ["Boltgun", "Frag & Krak grenades"] },
+            { id: "special", name: "Special Weapon", wargear: ["Boltgun", "Flamer", "Frag & Krak grenades"] },
+            { id: "heavy", name: "Heavy Weapon", wargear: ["Boltgun", "Heavy bolter", "Frag & Krak grenades"] }
+          ]
         }
       ],
       heavySupport: [
@@ -65,7 +94,12 @@ const factions = {
           unitCost: 18,
           stats: "M6 WS3+ BS3+ S4 T4 W1 A1 Ld7 Sv3+",
           wargear: ["Heavy weapon", "Frag & Krak grenades"],
-          abilities: ["Signum", "Fire Discipline"]
+          abilities: ["Signum", "Fire Discipline"],
+          loadouts: [
+            { id: "missile", name: "Missile Launchers", wargear: ["Missile launcher", "Frag & Krak grenades"] },
+            { id: "lascannon", name: "Lascannons", wargear: ["Lascannon", "Frag & Krak grenades"] },
+            { id: "heavy-bolter", name: "Heavy Bolters", wargear: ["Heavy bolter", "Frag & Krak grenades"] }
+          ]
         }
       ]
     }
@@ -81,7 +115,17 @@ const factions = {
           points: 80,
           stats: "M6 WS2+ BS5+ S5 T5 W5 A4 Ld8 Sv4+",
           wargear: ["Power klaw", "Slugga"],
-          abilities: ["Waaagh!", "'Ere We Go"]
+          abilities: ["Waaagh!", "'Ere We Go"],
+          loadouts: [
+            { id: "standard", name: "Standard Boss", wargear: ["Power klaw", "Slugga"] },
+            { id: "shooty", name: "Shooty Boss", wargear: ["Big choppa", "Kombi-rokkit"] },
+            { id: "mega", name: "Mega Armour", wargear: ["Power klaw", "Kombi-skorcha"] }
+          ],
+          wargearOptions: [
+            { id: "attack-squig", name: "Attack Squig", points: 15 },
+            { id: "cybork-body", name: "Cybork Body", points: 10 },
+            { id: "power-stabba", name: "Power Stabba", points: 5 }
+          ]
         },
         {
           id: "weirdboy",
@@ -89,7 +133,15 @@ const factions = {
           points: 70,
           stats: "M6 WS4+ BS5+ S4 T4 W4 A2 Ld7 Sv6+",
           wargear: ["Weirdboy staff"],
-          abilities: ["Psychic Powers", "Waaagh! Energy"]
+          abilities: ["Psychic Powers", "Waaagh! Energy"],
+          loadouts: [
+            { id: "standard", name: "Weirdboy Staff", wargear: ["Weirdboy staff"] },
+            { id: "warphead", name: "Warphead", wargear: ["Weirdboy staff", "Force field"] }
+          ],
+          wargearOptions: [
+            { id: "power-squig", name: "Power Squig", points: 10 },
+            { id: "grot-prod", name: "Grot Prod", points: 5 }
+          ]
         }
       ],
       troops: [
@@ -102,7 +154,12 @@ const factions = {
           unitCost: 9,
           stats: "M6 WS3+ BS5+ S4 T4 W1 A2 Ld6 Sv6+",
           wargear: ["Slugga", "Choppa"],
-          abilities: ["Mob Rule", "'Ere We Go"]
+          abilities: ["Mob Rule", "'Ere We Go"],
+          loadouts: [
+            { id: "standard", name: "Slugga & Choppa", wargear: ["Slugga", "Choppa"] },
+            { id: "shoota", name: "Shootas", wargear: ["Shoota"] },
+            { id: "mixed", name: "Mixed Mob", wargear: ["Slugga", "Choppa", "Big Shoota"] }
+          ]
         },
         {
           id: "grots",
@@ -113,7 +170,11 @@ const factions = {
           unitCost: 4,
           stats: "M6 WS5+ BS4+ S2 T3 W1 A1 Ld4 Sv7+",
           wargear: ["Grot blaster"],
-          abilities: ["Expendable"]
+          abilities: ["Expendable"],
+          loadouts: [
+            { id: "standard", name: "Grot Blasters", wargear: ["Grot blaster"] },
+            { id: "runtherd", name: "With Runtherd", wargear: ["Grot blaster", "Grabba stikk"] }
+          ]
         }
       ],
       heavySupport: [
@@ -126,11 +187,28 @@ const factions = {
           unitCost: 17,
           stats: "M6 WS3+ BS5+ S4 T4 W1 A2 Ld6 Sv6+",
           wargear: ["Deffgun"],
-          abilities: ["Dakka Dakka Dakka"]
+          abilities: ["Dakka Dakka Dakka"],
+          loadouts: [
+            { id: "standard", name: "Deffguns", wargear: ["Deffgun"] },
+            { id: "burnas", name: "Burna Boyz", wargear: ["Burna"] },
+            { id: "mixed", name: "Mixed Squad", wargear: ["Deffgun", "Burna"] }
+          ]
         }
       ]
     }
   }
+};
+
+type Loadout = {
+  id: string;
+  name: string;
+  wargear: string[];
+};
+
+type WargearOption = {
+  id: string;
+  name: string;
+  points: number;
 };
 
 type Unit = {
@@ -143,12 +221,16 @@ type Unit = {
   stats: string;
   wargear: string[];
   abilities: string[];
+  loadouts?: Loadout[];
+  wargearOptions?: WargearOption[];
 };
 
 type ArmyUnit = {
   unit: Unit;
   size: number;
   category: string;
+  selectedLoadout?: string;
+  selectedWargear: string[];
 };
 
 const ArmyBuilder = () => {
@@ -168,7 +250,9 @@ const ArmyBuilder = () => {
     const newUnit: ArmyUnit = {
       unit,
       size: unit.minSize || 1,
-      category
+      category,
+      selectedLoadout: unit.loadouts?.[0]?.id,
+      selectedWargear: []
     };
     setArmy(prev => [...prev, newUnit]);
   };
@@ -190,11 +274,45 @@ const ArmyBuilder = () => {
     }));
   };
 
+  const updateUnitLoadout = (index: number, loadoutId: string) => {
+    setArmy(prev => prev.map((armyUnit, i) => {
+      if (i === index) {
+        return { ...armyUnit, selectedLoadout: loadoutId };
+      }
+      return armyUnit;
+    }));
+  };
+
+  const toggleWargear = (index: number, wargearId: string) => {
+    setArmy(prev => prev.map((armyUnit, i) => {
+      if (i === index) {
+        const selectedWargear = armyUnit.selectedWargear.includes(wargearId)
+          ? armyUnit.selectedWargear.filter(id => id !== wargearId)
+          : [...armyUnit.selectedWargear, wargearId];
+        return { ...armyUnit, selectedWargear };
+      }
+      return armyUnit;
+    }));
+  };
+
   const calculateUnitPoints = (armyUnit: ArmyUnit) => {
+    let basePoints = armyUnit.unit.points;
+    
+    // Add unit size cost
     if (armyUnit.unit.unitCost) {
-      return armyUnit.unit.points + (armyUnit.unit.unitCost * (armyUnit.size - (armyUnit.unit.minSize || 1)));
+      basePoints += armyUnit.unit.unitCost * (armyUnit.size - (armyUnit.unit.minSize || 1));
     }
-    return armyUnit.unit.points;
+    
+    // Add wargear costs
+    if (armyUnit.unit.wargearOptions) {
+      const wargearCost = armyUnit.selectedWargear.reduce((total, wargearId) => {
+        const wargear = armyUnit.unit.wargearOptions?.find(w => w.id === wargearId);
+        return total + (wargear?.points || 0);
+      }, 0);
+      basePoints += wargearCost;
+    }
+    
+    return basePoints;
   };
 
   const totalPoints = army.reduce((total, armyUnit) => total + calculateUnitPoints(armyUnit), 0);
@@ -285,6 +403,12 @@ const ArmyBuilder = () => {
                               <div>{unit.stats}</div>
                               <div><strong>Wargear:</strong> {unit.wargear.join(', ')}</div>
                               <div><strong>Abilities:</strong> {unit.abilities.join(', ')}</div>
+                              {unit.loadouts && unit.loadouts.length > 1 && (
+                                <div><strong>Loadouts:</strong> {unit.loadouts.length} options available</div>
+                              )}
+                              {unit.wargearOptions && unit.wargearOptions.length > 0 && (
+                                <div><strong>Wargear Options:</strong> {unit.wargearOptions.length} upgrades available</div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -350,6 +474,47 @@ const ArmyBuilder = () => {
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
+
+                            {/* Loadout Selection */}
+                            {armyUnit.unit.loadouts && armyUnit.unit.loadouts.length > 1 && (
+                              <div className="mb-2">
+                                <label className="text-xs text-muted-foreground">Loadout:</label>
+                                <select
+                                  value={armyUnit.selectedLoadout || ''}
+                                  onChange={(e) => updateUnitLoadout(index, e.target.value)}
+                                  className="w-full text-xs p-1 rounded bg-background border border-border"
+                                >
+                                  {armyUnit.unit.loadouts.map((loadout) => (
+                                    <option key={loadout.id} value={loadout.id}>
+                                      {loadout.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
+                            {/* Wargear Options (HQ only) */}
+                            {armyUnit.category === 'hq' && armyUnit.unit.wargearOptions && armyUnit.unit.wargearOptions.length > 0 && (
+                              <div className="mb-2">
+                                <label className="text-xs text-muted-foreground">Wargear:</label>
+                                <div className="space-y-1">
+                                  {armyUnit.unit.wargearOptions.map((wargear) => (
+                                    <div key={wargear.id} className="flex items-center justify-between">
+                                      <label className="flex items-center text-xs">
+                                        <input
+                                          type="checkbox"
+                                          checked={armyUnit.selectedWargear.includes(wargear.id)}
+                                          onChange={() => toggleWargear(index, wargear.id)}
+                                          className="mr-1 h-3 w-3"
+                                        />
+                                        {wargear.name}
+                                      </label>
+                                      <span className="text-xs text-muted-foreground">+{wargear.points}pts</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             
                             {armyUnit.unit.unitCost ? (
                               <div className="flex items-center justify-between">

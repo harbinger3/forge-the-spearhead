@@ -17,7 +17,7 @@ const ArmyBuilder = () => {
             </Button>
           </Link>
         </div>
-        <ArmyBuilderComponent />
+        <ArmyBuilderComponent factionId={factionId!} />
       </div>
     </div>
   );

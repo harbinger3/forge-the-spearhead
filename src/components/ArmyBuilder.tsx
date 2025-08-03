@@ -233,8 +233,11 @@ type ArmyUnit = {
   selectedWargear: string[];
 };
 
-const ArmyBuilder = () => {
-  const [selectedFaction, setSelectedFaction] = useState<string>('ultramarines');
+interface ArmyBuilderProps {
+  factionId: string;
+}
+
+const ArmyBuilder = ({ factionId }: ArmyBuilderProps) => {
   const [army, setArmy] = useState<ArmyUnit[]>([]);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     hq: true,
@@ -317,7 +320,23 @@ const ArmyBuilder = () => {
 
   const totalPoints = army.reduce((total, armyUnit) => total + calculateUnitPoints(armyUnit), 0);
 
-  const faction = factions[selectedFaction as keyof typeof factions];
+  const faction = factions[factionId as keyof typeof factions];
+
+  // Handle case where faction doesn't exist
+  if (!faction) {
+    return (
+      <div className="min-h-screen bg-gradient-void p-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Faction Not Found
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            The requested faction could not be found.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-void p-4">
@@ -327,38 +346,12 @@ const ArmyBuilder = () => {
           <h1 className="text-4xl font-bold text-foreground mb-2 animate-glow">
             WARHAMMER 40,000
           </h1>
-          <p className="text-lg text-muted-foreground">Army Builder</p>
+          <p className="text-lg text-muted-foreground">Army Builder - {faction.name}</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Faction Selection & Unit Browser */}
+          {/* Unit Browser */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Faction Selection */}
-            <Card className="bg-card border-border shadow-elevation">
-              <CardHeader>
-                <CardTitle className="text-primary">Select Faction</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(factions).map(([key, faction]) => (
-                    <Button
-                      key={key}
-                      variant={selectedFaction === key ? "default" : "outline"}
-                      onClick={() => setSelectedFaction(key)}
-                      className="h-auto p-4 text-left"
-                    >
-                      <div>
-                        <div className="font-semibold">{faction.name}</div>
-                        <div className="text-sm opacity-70">
-                          {Object.values(faction.units).flat().length} units available
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Unit Browser */}
             <Card className="bg-card border-border shadow-elevation">
               <CardHeader>

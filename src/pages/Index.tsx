@@ -11,22 +11,16 @@ const gameSystems = [
     name: "Warhammer 40,000",
     description: "In the grim darkness of the far future, there is only war",
     version: "10th Edition",
-    factions: [
-      {
-        id: "ultramarines",
-        name: "Ultramarines",
-        description: "Noble sons of Guilliman",
-        color: "bg-gradient-to-r from-blue-600 to-blue-800",
-        unitCount: 45
-      },
-      {
-        id: "orks",
-        name: "Orks",
-        description: "The green tide of destruction",
-        color: "bg-gradient-to-r from-green-600 to-green-800", 
-        unitCount: 38
-      }
-    ]
+    factionCount: 25,
+    color: "bg-gradient-to-r from-red-600 to-orange-600"
+  },
+  {
+    id: "age-of-sigmar",
+    name: "Age of Sigmar",
+    description: "Forge your legend in the Mortal Realms",
+    version: "4th Edition",
+    factionCount: 25,
+    color: "bg-gradient-to-r from-purple-600 to-blue-600"
   }
 ];
 
@@ -50,55 +44,43 @@ const Index = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Game Systems */}
-        <div className="space-y-12">
-          {gameSystems.map((system) => (
-            <div key={system.id}>
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-primary mb-2">{system.name}</h2>
-                <p className="text-muted-foreground">{system.description}</p>
-                <Badge variant="outline" className="mt-2">{system.version}</Badge>
-              </div>
+        {/* Game Systems Selection */}
+        <div className="mb-12">
+          <h2 className="text-4xl font-bold text-center text-primary mb-4">Choose Your Game System</h2>
+          <p className="text-center text-muted-foreground mb-8">Select a game system to explore factions and build your army</p>
+        </div>
 
-              {/* Factions Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {system.factions.map((faction) => (
-                  <Card key={faction.id} className="bg-card border-border shadow-elevation hover:shadow-plasma transition-all duration-300 group">
-                    <div className={`h-32 ${faction.color} relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-black/40" />
-                      <div className="absolute bottom-4 left-4 z-10">
-                        <h3 className="text-xl font-bold text-white">{faction.name}</h3>
-                        <p className="text-white/80 text-sm">{faction.description}</p>
-                      </div>
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {gameSystems.map((system) => (
+            <Link key={system.id} to={`/system/${system.id}`}>
+              <Card className="bg-card border-border shadow-elevation hover:shadow-plasma transition-all duration-300 group cursor-pointer h-full">
+                <div className={`h-48 ${system.color} relative overflow-hidden`}>
+                  <div className="absolute inset-0 bg-black/40" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <h3 className="text-3xl font-bold text-white mb-2">{system.name}</h3>
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                        {system.version}
+                      </Badge>
                     </div>
-                    
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <Badge variant="secondary" className="text-xs">
-                          {faction.unitCount} units available
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <Link to={`/army/${faction.id}`}>
-                          <Button className="w-full" variant="default">
-                            <Shield className="h-4 w-4 mr-2" />
-                            View Army Info
-                          </Button>
-                        </Link>
-                        
-                        <Link to={`/army-builder/${faction.id}`}>
-                          <Button className="w-full" variant="outline">
-                            <Users className="h-4 w-4 mr-2" />
-                            Quick Builder
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                  </div>
+                </div>
+                
+                <CardContent className="p-8">
+                  <p className="text-muted-foreground mb-6 text-center">{system.description}</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-sm">
+                      {system.factionCount} Factions Available
+                    </Badge>
+                    <div className="flex items-center text-primary">
+                      <span className="text-sm mr-2">Explore Factions</span>
+                      <Users className="h-4 w-4" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
 
@@ -106,25 +88,25 @@ const Index = () => {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-card/50 border-border text-center">
             <CardContent className="p-6">
-              <Sword className="h-8 w-8 mx-auto mb-2 text-primary" />
+              <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
               <h3 className="text-2xl font-bold text-primary">2</h3>
-              <p className="text-muted-foreground">Factions Available</p>
+              <p className="text-muted-foreground">Game Systems</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-card/50 border-border text-center">
+            <CardContent className="p-6">
+              <Sword className="h-8 w-8 mx-auto mb-2 text-primary" />
+              <h3 className="text-2xl font-bold text-primary">50</h3>
+              <p className="text-muted-foreground">Total Factions</p>
             </CardContent>
           </Card>
           
           <Card className="bg-card/50 border-border text-center">
             <CardContent className="p-6">
               <Users className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <h3 className="text-2xl font-bold text-primary">83</h3>
-              <p className="text-muted-foreground">Total Units</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-card/50 border-border text-center">
-            <CardContent className="p-6">
-              <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
-              <h3 className="text-2xl font-bold text-primary">1</h3>
-              <p className="text-muted-foreground">Game Systems</p>
+              <h3 className="text-2xl font-bold text-primary">∞</h3>
+              <p className="text-muted-foreground">Army Combinations</p>
             </CardContent>
           </Card>
         </div>

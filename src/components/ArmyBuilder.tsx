@@ -1,203 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Minus, ChevronDown, Printer, Download, Trash2 } from 'lucide-react';
+import { Plus, Minus, ChevronDown, Printer, Download, Trash2, Loader2 } from 'lucide-react';
+import { useFactionData } from '@/hooks/useFactionData';
+import type { ParsedUnit, ParsedFaction } from '@/services/bsDataParser';
 
-// Mock data for factions and units
-const factions = {
-  ultramarines: {
-    name: "Ultramarines",
-    color: "accent",
-    units: {
-      hq: [
-        {
-          id: "captain",
-          name: "Captain in Tactical Dreadnought Armour",
-          points: 115,
-          stats: "M6 WS2+ BS2+ S4 T4 W5 A4 Ld9 Sv2+",
-          wargear: ["Storm bolter", "Power fist"],
-          abilities: ["Deep Strike", "Rites of Battle"],
-          loadouts: [
-            { id: "standard", name: "Standard Loadout", wargear: ["Storm bolter", "Power fist"] },
-            { id: "melee", name: "Melee Focus", wargear: ["Storm bolter", "Thunder hammer"] },
-            { id: "ranged", name: "Ranged Focus", wargear: ["Combi-melta", "Power fist"] }
-          ],
-          wargearOptions: [
-            { id: "relic-blade", name: "Relic Blade", points: 10 },
-            { id: "digital-weapons", name: "Digital Weapons", points: 5 },
-            { id: "iron-halo", name: "Iron Halo", points: 15 }
-          ]
-        },
-        {
-          id: "librarian",
-          name: "Librarian",
-          points: 90,
-          stats: "M6 WS3+ BS3+ S4 T4 W4 A3 Ld9 Sv3+",
-          wargear: ["Force weapon", "Bolt pistol"],
-          abilities: ["Psychic Powers", "Know No Fear"],
-          loadouts: [
-            { id: "standard", name: "Standard Loadout", wargear: ["Force weapon", "Bolt pistol"] },
-            { id: "terminator", name: "Terminator Armour", wargear: ["Force weapon", "Storm bolter"] }
-          ],
-          wargearOptions: [
-            { id: "psychic-hood", name: "Psychic Hood", points: 10 },
-            { id: "force-axe", name: "Force Axe", points: 5 },
-            { id: "jump-pack", name: "Jump Pack", points: 20 }
-          ]
-        }
-      ],
-      troops: [
-        {
-          id: "intercessors",
-          name: "Intercessor Squad",
-          points: 100,
-          minSize: 5,
-          maxSize: 10,
-          unitCost: 20,
-          stats: "M6 WS3+ BS3+ S4 T4 W2 A2 Ld7 Sv3+",
-          wargear: ["Bolt rifle", "Frag & Krak grenades"],
-          abilities: ["Combat Squads", "Rapid Fire"],
-          loadouts: [
-            { id: "standard", name: "Bolt Rifles", wargear: ["Bolt rifle", "Frag & Krak grenades"] },
-            { id: "auto", name: "Auto Bolt Rifles", wargear: ["Auto bolt rifle", "Frag & Krak grenades"] },
-            { id: "stalker", name: "Stalker Bolt Rifles", wargear: ["Stalker bolt rifle", "Frag & Krak grenades"] }
-          ]
-        },
-        {
-          id: "tactical",
-          name: "Tactical Squad",
-          points: 90,
-          minSize: 5,
-          maxSize: 10,
-          unitCost: 18,
-          stats: "M6 WS3+ BS3+ S4 T4 W1 A1 Ld7 Sv3+",
-          wargear: ["Boltgun", "Frag & Krak grenades"],
-          abilities: ["Combat Squads", "Bolter Discipline"],
-          loadouts: [
-            { id: "standard", name: "Boltguns", wargear: ["Boltgun", "Frag & Krak grenades"] },
-            { id: "special", name: "Special Weapon", wargear: ["Boltgun", "Flamer", "Frag & Krak grenades"] },
-            { id: "heavy", name: "Heavy Weapon", wargear: ["Boltgun", "Heavy bolter", "Frag & Krak grenades"] }
-          ]
-        }
-      ],
-      heavySupport: [
-        {
-          id: "devastators",
-          name: "Devastator Squad",
-          points: 90,
-          minSize: 5,
-          maxSize: 10,
-          unitCost: 18,
-          stats: "M6 WS3+ BS3+ S4 T4 W1 A1 Ld7 Sv3+",
-          wargear: ["Heavy weapon", "Frag & Krak grenades"],
-          abilities: ["Signum", "Fire Discipline"],
-          loadouts: [
-            { id: "missile", name: "Missile Launchers", wargear: ["Missile launcher", "Frag & Krak grenades"] },
-            { id: "lascannon", name: "Lascannons", wargear: ["Lascannon", "Frag & Krak grenades"] },
-            { id: "heavy-bolter", name: "Heavy Bolters", wargear: ["Heavy bolter", "Frag & Krak grenades"] }
-          ]
-        }
-      ]
-    }
-  },
-  orks: {
-    name: "Orks",
-    color: "destructive",
-    units: {
-      hq: [
-        {
-          id: "warboss",
-          name: "Warboss",
-          points: 80,
-          stats: "M6 WS2+ BS5+ S5 T5 W5 A4 Ld8 Sv4+",
-          wargear: ["Power klaw", "Slugga"],
-          abilities: ["Waaagh!", "'Ere We Go"],
-          loadouts: [
-            { id: "standard", name: "Standard Boss", wargear: ["Power klaw", "Slugga"] },
-            { id: "shooty", name: "Shooty Boss", wargear: ["Big choppa", "Kombi-rokkit"] },
-            { id: "mega", name: "Mega Armour", wargear: ["Power klaw", "Kombi-skorcha"] }
-          ],
-          wargearOptions: [
-            { id: "attack-squig", name: "Attack Squig", points: 15 },
-            { id: "cybork-body", name: "Cybork Body", points: 10 },
-            { id: "power-stabba", name: "Power Stabba", points: 5 }
-          ]
-        },
-        {
-          id: "weirdboy",
-          name: "Weirdboy",
-          points: 70,
-          stats: "M6 WS4+ BS5+ S4 T4 W4 A2 Ld7 Sv6+",
-          wargear: ["Weirdboy staff"],
-          abilities: ["Psychic Powers", "Waaagh! Energy"],
-          loadouts: [
-            { id: "standard", name: "Weirdboy Staff", wargear: ["Weirdboy staff"] },
-            { id: "warphead", name: "Warphead", wargear: ["Weirdboy staff", "Force field"] }
-          ],
-          wargearOptions: [
-            { id: "power-squig", name: "Power Squig", points: 10 },
-            { id: "grot-prod", name: "Grot Prod", points: 5 }
-          ]
-        }
-      ],
-      troops: [
-        {
-          id: "boyz",
-          name: "Boyz",
-          points: 90,
-          minSize: 10,
-          maxSize: 30,
-          unitCost: 9,
-          stats: "M6 WS3+ BS5+ S4 T4 W1 A2 Ld6 Sv6+",
-          wargear: ["Slugga", "Choppa"],
-          abilities: ["Mob Rule", "'Ere We Go"],
-          loadouts: [
-            { id: "standard", name: "Slugga & Choppa", wargear: ["Slugga", "Choppa"] },
-            { id: "shoota", name: "Shootas", wargear: ["Shoota"] },
-            { id: "mixed", name: "Mixed Mob", wargear: ["Slugga", "Choppa", "Big Shoota"] }
-          ]
-        },
-        {
-          id: "grots",
-          name: "Gretchin",
-          points: 40,
-          minSize: 10,
-          maxSize: 30,
-          unitCost: 4,
-          stats: "M6 WS5+ BS4+ S2 T3 W1 A1 Ld4 Sv7+",
-          wargear: ["Grot blaster"],
-          abilities: ["Expendable"],
-          loadouts: [
-            { id: "standard", name: "Grot Blasters", wargear: ["Grot blaster"] },
-            { id: "runtherd", name: "With Runtherd", wargear: ["Grot blaster", "Grabba stikk"] }
-          ]
-        }
-      ],
-      heavySupport: [
-        {
-          id: "lootas",
-          name: "Lootas",
-          points: 85,
-          minSize: 5,
-          maxSize: 15,
-          unitCost: 17,
-          stats: "M6 WS3+ BS5+ S4 T4 W1 A2 Ld6 Sv6+",
-          wargear: ["Deffgun"],
-          abilities: ["Dakka Dakka Dakka"],
-          loadouts: [
-            { id: "standard", name: "Deffguns", wargear: ["Deffgun"] },
-            { id: "burnas", name: "Burna Boyz", wargear: ["Burna"] },
-            { id: "mixed", name: "Mixed Squad", wargear: ["Deffgun", "Burna"] }
-          ]
-        }
-      ]
-    }
-  }
-};
+// Legacy unit structure for migration compatibility
+type LegacyUnit = ParsedUnit;
 
 type Loadout = {
   id: string;
@@ -211,19 +24,7 @@ type WargearOption = {
   points: number;
 };
 
-type Unit = {
-  id: string;
-  name: string;
-  points: number;
-  minSize?: number;
-  maxSize?: number;
-  unitCost?: number;
-  stats: string;
-  wargear: string[];
-  abilities: string[];
-  loadouts?: Loadout[];
-  wargearOptions?: WargearOption[];
-};
+type Unit = ParsedUnit;
 
 type ArmyUnit = {
   unit: Unit;
@@ -238,11 +39,18 @@ interface ArmyBuilderProps {
 }
 
 const ArmyBuilder = ({ factionId }: ArmyBuilderProps) => {
+  const { factions, isLoading, error, getFaction } = useFactionData();
   const [army, setArmy] = useState<ArmyUnit[]>([]);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    hq: true,
+    epicHeroes: true,
+    characters: true,
     troops: true,
-    heavySupport: false
+    elites: false,
+    fastAttack: false,
+    heavySupport: false,
+    flyer: false,
+    transport: false,
+    fortification: false
   });
 
   const toggleSection = (section: string) => {
@@ -320,7 +128,45 @@ const ArmyBuilder = ({ factionId }: ArmyBuilderProps) => {
 
   const totalPoints = army.reduce((total, armyUnit) => total + calculateUnitPoints(armyUnit), 0);
 
-  const faction = factions[factionId as keyof typeof factions];
+  const faction = getFaction(factionId);
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-void p-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <h1 className="text-4xl font-bold text-foreground">
+              Loading Faction Data...
+            </h1>
+          </div>
+          <p className="text-lg text-muted-foreground">
+            Fetching the latest unit data from BSData repository
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-void p-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Error Loading Data
+          </h1>
+          <p className="text-lg text-muted-foreground mb-4">
+            {error}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Handle case where faction doesn't exist
   if (!faction) {
@@ -331,7 +177,7 @@ const ArmyBuilder = ({ factionId }: ArmyBuilderProps) => {
             Faction Not Found
           </h1>
           <p className="text-lg text-muted-foreground">
-            The requested faction could not be found.
+            The requested faction "{factionId}" could not be found.
           </p>
         </div>
       </div>
@@ -486,8 +332,8 @@ const ArmyBuilder = ({ factionId }: ArmyBuilderProps) => {
                               </div>
                             )}
 
-                            {/* Wargear Options (HQ only) */}
-                            {armyUnit.category === 'hq' && armyUnit.unit.wargearOptions && armyUnit.unit.wargearOptions.length > 0 && (
+            {/* Wargear Options (Characters and Epic Heroes only) */}
+            {(['characters', 'epicHeroes'].includes(armyUnit.category as any)) && armyUnit.unit.wargearOptions && armyUnit.unit.wargearOptions.length > 0 && (
                               <div className="mb-2">
                                 <label className="text-xs text-muted-foreground">Wargear:</label>
                                 <div className="space-y-1">

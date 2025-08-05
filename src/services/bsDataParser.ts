@@ -270,7 +270,7 @@ class BSDataParser {
   }
 
   private getBaseUnitName(unitName: string): string {
-    // Remove common weapon suffixes to get base unit name
+    // Expanded weapon suffixes to catch more variants
     const weaponSuffixes = [
       ' with bolt rifles',
       ' with stalker bolt rifles', 
@@ -279,7 +279,30 @@ class BSDataParser {
       ' with assault bolt rifles',
       ' with plasma incinerators',
       ' with melta rifles',
-      ' with heavy plasma incinerators'
+      ' with heavy plasma incinerators',
+      ' with thunder hammers',
+      ' with storm bolters',
+      ' with chainswords',
+      ' with plasma pistols',
+      ' with power fists',
+      ' with power swords',
+      ' with combi-weapons',
+      ' with missile launchers',
+      ' with heavy bolters',
+      ' with lascannons',
+      ' with multi-meltas',
+      ' with assault cannons',
+      ' with flamers',
+      ' with meltaguns',
+      ' with plasma guns',
+      ' with grav-guns',
+      ' with volkite weapons',
+      ' with inferno pistols',
+      ' with master-crafted',
+      ' with relic',
+      ' with terminator',
+      ' armed with',
+      ' equipped with'
     ];
     
     let baseName = unitName;
@@ -294,9 +317,9 @@ class BSDataParser {
   }
 
   private determineUnitCategory(entry: Element, unitName: string): keyof ParsedFaction['units'] {
-    // Check for Epic Heroes first
     const categoryLinks = entry.querySelectorAll('categoryLink');
     let isEpicHero = false;
+    let isCharacter = false;
     let category: keyof ParsedFaction['units'] = 'troops'; // default
 
     categoryLinks.forEach(catLink => {
@@ -304,13 +327,18 @@ class BSDataParser {
       if (catName === 'Epic Heroes') {
         isEpicHero = true;
         category = 'epicHeroes';
-      } else if (catName && CATEGORY_MAPPINGS[catName] && !isEpicHero) {
+      } else if (catName === 'Character') {
+        isCharacter = true;
+        if (!isEpicHero) {
+          category = 'characters';
+        }
+      } else if (catName && CATEGORY_MAPPINGS[catName] && !isEpicHero && !isCharacter) {
         category = CATEGORY_MAPPINGS[catName];
       }
     });
 
-    // Character detection for non-epic heroes
-    if (!isEpicHero && this.isCharacterUnit(unitName)) {
+    // Fallback character detection using keywords if no categoryLink
+    if (!isEpicHero && !isCharacter && this.isCharacterUnit(unitName)) {
       category = 'characters';
     }
 
@@ -378,42 +406,58 @@ class BSDataParser {
   }
 
   private extractPoints(entry: Element): { base: number; minSize?: number; maxSize?: number; unitCost?: number } {
-    const costs = entry.querySelectorAll('cost');
     let basePoints = 0;
-    
-    costs.forEach(cost => {
-      const name = cost.getAttribute('name');
-      const value = parseFloat(cost.getAttribute('value') || '0');
-      
-      if (name === 'pts' || name === 'points') {
-        basePoints = value;
-      }
-    });
-
-    // Try to extract squad size from constraints
-    const constraints = entry.querySelectorAll('constraint');
     let minSize: number | undefined;
     let maxSize: number | undefined;
     let unitCost: number | undefined;
-
-    constraints.forEach(constraint => {
-      const type = constraint.getAttribute('type');
-      const value = parseFloat(constraint.getAttribute('value') || '0');
-      
-      if (type === 'min') {
-        minSize = value;
-      } else if (type === 'max') {
-        maxSize = value;
+    
+    // Extract base cost - check both current entry and parent
+    const costs = entry.querySelectorAll('cost[name="pts"], cost[name="points"]');
+    costs.forEach(cost => {
+      const value = parseFloat(cost.getAttribute('value') || '0');
+      if (value > 0) {
+        basePoints += value;
       }
     });
 
-    // Calculate per-model cost if it's a squad
-    if (minSize && minSize > 1 && basePoints > 0) {
+    // Extract constraints for squad sizes
+    const constraints = entry.querySelectorAll('constraint');
+    constraints.forEach(constraint => {
+      const type = constraint.getAttribute('type');
+      const field = constraint.getAttribute('field');
+      const value = parseFloat(constraint.getAttribute('value') || '0');
+      
+      if (field === 'selections' || field === 'limit') {
+        if (type === 'min' && value > 0) {
+          minSize = value;
+        } else if (type === 'max' && value > 0) {
+          maxSize = value;
+        }
+      }
+    });
+
+    // Look for modifiers that might indicate per-model costs
+    const modifiers = entry.querySelectorAll('modifier');
+    modifiers.forEach(modifier => {
+      const type = modifier.getAttribute('type');
+      const field = modifier.getAttribute('field');
+      
+      if (type === 'multiply' && field === 'selections') {
+        // This suggests the cost is per-model
+        const value = parseFloat(modifier.getAttribute('value') || '1');
+        if (minSize && value > 0) {
+          unitCost = Math.round(basePoints / minSize);
+        }
+      }
+    });
+
+    // Fallback calculation for per-model cost
+    if (!unitCost && minSize && minSize > 1 && basePoints > 0) {
       unitCost = Math.round(basePoints / minSize);
     }
 
     return {
-      base: basePoints || 0,
+      base: basePoints,
       minSize,
       maxSize,
       unitCost
@@ -483,7 +527,7 @@ class BSDataParser {
   private createLoadout(entry: Element, unitName: string): Loadout | null {
     const wargear: string[] = [];
     
-    // Extract wargear from profiles
+    // Extract wargear from weapon profiles
     const weaponProfiles = entry.querySelectorAll('profile[typeName="Weapon"]');
     weaponProfiles.forEach(profile => {
       const weaponName = profile.getAttribute('name');
@@ -492,8 +536,8 @@ class BSDataParser {
       }
     });
 
-    // Extract from selection entries
-    const selections = entry.querySelectorAll('selectionEntry');
+    // Extract from nested selection entries (weapons and equipment)
+    const selections = entry.querySelectorAll('selectionEntry, selectionEntryLink');
     selections.forEach(selection => {
       const name = selection.getAttribute('name');
       if (name && this.isWargearItem(name)) {
@@ -501,47 +545,95 @@ class BSDataParser {
       }
     });
 
-    if (wargear.length === 0) {
-      wargear.push('Standard Equipment');
+    // Extract from entry links (shared equipment references)
+    const entryLinks = entry.querySelectorAll('entryLink');
+    entryLinks.forEach(link => {
+      const name = link.getAttribute('name');
+      if (name && this.isWargearItem(name)) {
+        wargear.push(name);
+      }
+    });
+
+    // Extract from selectionEntryGroups (weapon options)
+    const selectionGroups = entry.querySelectorAll('selectionEntryGroup > selectionEntry');
+    selectionGroups.forEach(selection => {
+      const name = selection.getAttribute('name');
+      if (name && this.isWargearItem(name)) {
+        wargear.push(name);
+      }
+    });
+
+    // Remove duplicates
+    const uniqueWargear = [...new Set(wargear)];
+
+    if (uniqueWargear.length === 0) {
+      uniqueWargear.push('Standard Equipment');
     }
 
     // Create loadout name based on primary weapon or unit variant
-    const loadoutName = this.generateLoadoutName(unitName, wargear);
+    const loadoutName = this.generateLoadoutName(unitName, uniqueWargear);
 
     return {
       id: this.generateId(loadoutName),
       name: loadoutName,
-      wargear: wargear
+      wargear: uniqueWargear
     };
   }
 
   private isWargearItem(name: string): boolean {
-    const wargearKeywords = [
-      'bolt', 'plasma', 'melta', 'flamer', 'rifle', 'pistol', 'sword', 
-      'hammer', 'axe', 'shield', 'armour', 'grenade', 'launcher'
+    const lower = name.toLowerCase();
+    
+    // Skip non-wargear categories
+    const excludeKeywords = [
+      'upgrade', 'psyker', 'mark of', 'warlord', 'detachment', 'enhancement'
     ];
     
-    return wargearKeywords.some(keyword => 
-      name.toLowerCase().includes(keyword)
-    );
+    if (excludeKeywords.some(keyword => lower.includes(keyword))) {
+      return false;
+    }
+    
+    const wargearKeywords = [
+      'bolt', 'plasma', 'melta', 'flamer', 'rifle', 'pistol', 'sword', 
+      'hammer', 'axe', 'shield', 'armour', 'grenade', 'launcher',
+      'cannon', 'gun', 'weapon', 'blade', 'staff', 'spear', 'claw',
+      'whip', 'chain', 'power', 'force', 'storm', 'heavy', 'assault',
+      'rapid fire', 'combi', 'multi', 'twin', 'master-crafted', 'relic'
+    ];
+    
+    return wargearKeywords.some(keyword => lower.includes(keyword));
   }
 
   private generateLoadoutName(unitName: string, wargear: string[]): string {
-    // Try to use the primary weapon as loadout name
-    const primaryWeapon = wargear.find(w => 
-      w.toLowerCase().includes('rifle') || 
-      w.toLowerCase().includes('cannon') ||
-      w.toLowerCase().includes('launcher')
-    );
-    
-    if (primaryWeapon) {
-      return primaryWeapon;
-    }
-    
-    // If unit name has weapon info, extract it
+    // If unit name has weapon info, extract it first
     const weaponMatch = unitName.match(/with (.+)$/);
     if (weaponMatch) {
       return weaponMatch[1];
+    }
+    
+    // Filter out non-weapon items and get primary weapons
+    const weapons = wargear.filter(w => {
+      const lower = w.toLowerCase();
+      return !lower.includes('grenades') && 
+             !lower.includes('armour') && 
+             !lower.includes('equipment') &&
+             (lower.includes('rifle') || 
+              lower.includes('cannon') ||
+              lower.includes('launcher') ||
+              lower.includes('pistol') ||
+              lower.includes('sword') ||
+              lower.includes('hammer') ||
+              lower.includes('bolter') ||
+              lower.includes('plasma') ||
+              lower.includes('melta') ||
+              lower.includes('flamer'));
+    });
+    
+    if (weapons.length > 0) {
+      // Join multiple weapons with " & "
+      if (weapons.length > 2) {
+        return weapons.slice(0, 2).join(' & ') + ' & more';
+      }
+      return weapons.join(' & ');
     }
     
     return 'Standard Loadout';

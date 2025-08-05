@@ -204,78 +204,61 @@ class BSDataParser {
       fortification: []
     };
 
-    // Extract entry links which reference units
-    const entryLinks = xmlDoc.querySelectorAll('entryLink[type="selectionEntry"]');
-    
-    entryLinks.forEach(entryLink => {
-      const unitName = entryLink.getAttribute('name');
-      if (!unitName || unitName.includes('[Legends]')) return; // Skip legends units for now
+    // Get all selection entries (the actual unit definitions)
+    const selectionEntries = xmlDoc.querySelectorAll('selectionEntry');
+    const unitMap = new Map<string, ParsedUnit>();
 
-      // Determine category based on category links
-      const categoryLinks = entryLink.querySelectorAll('categoryLink');
-      let category: keyof ParsedFaction['units'] = 'troops'; // default
-      let isEpicHero = false;
+    selectionEntries.forEach(entry => {
+      const unitName = entry.getAttribute('name');
+      if (!unitName || unitName.includes('[Legends]')) return;
 
-      categoryLinks.forEach(catLink => {
-        const catName = catLink.getAttribute('name');
-        if (catName === 'Epic Heroes') {
-          isEpicHero = true;
-          category = 'epicHeroes';
-        } else if (catName && CATEGORY_MAPPINGS[catName]) {
-          if (!isEpicHero) { // Epic Heroes takes precedence
-            category = CATEGORY_MAPPINGS[catName];
-          }
+      // Get the base unit name (remove weapon variations)
+      const baseUnitName = this.getBaseUnitName(unitName);
+      const unitId = this.generateId(baseUnitName);
+
+      // Determine category
+      const category = this.determineUnitCategory(entry, unitName);
+      
+      // Check if we already have this base unit
+      let unit = unitMap.get(unitId);
+      
+      if (!unit) {
+        // Create new unit
+        const stats = this.extractStats(entry);
+        const points = this.extractPoints(entry);
+        
+        unit = {
+          id: unitId,
+          name: baseUnitName,
+          points: points.base,
+          stats: stats,
+          wargear: [],
+          abilities: this.extractAbilities(entry),
+          keywords: this.extractKeywords(entry),
+          loadouts: []
+        };
+
+        // Add squad size for non-character units
+        if (!['epicHeroes', 'characters'].includes(category)) {
+          unit.minSize = points.minSize || 5;
+          unit.maxSize = points.maxSize || 10;
+          unit.unitCost = points.unitCost || 20;
         }
-      });
 
-      // If it's a character but not epic hero, put in characters category
-      if ((unitName.includes('Captain') || unitName.includes('Chaplain') || 
-          unitName.includes('Librarian') || unitName.includes('Lieutenant')) && !isEpicHero) {
-        category = 'characters';
+        // Add wargear options for characters
+        if (['epicHeroes', 'characters'].includes(category)) {
+          unit.wargearOptions = this.extractWargearOptions(entry);
+        }
+
+        unitMap.set(unitId, unit);
+        units[category].push(unit);
       }
 
-      // Create unit object with basic data
-      const unit: ParsedUnit = {
-        id: this.generateId(unitName),
-        name: unitName,
-        points: 100, // Default - would need deeper parsing for actual points
-        stats: 'M6 WS3+ BS3+ S4 T4 W2 A2 Ld7 Sv3+', // Default stats
-        wargear: ['Standard Equipment'],
-        abilities: ['Combat Squads'],
-        keywords: [],
-        loadouts: [
-          {
-            id: 'standard',
-            name: 'Standard Loadout',
-            wargear: ['Standard Equipment']
-          }
-        ]
-      };
-
-      // Add squad size for non-character units
-      if (!['epicHeroes', 'characters'].includes(category)) {
-        unit.minSize = 5;
-        unit.maxSize = 10;
-        unit.unitCost = 20;
+      // Add loadout for this variant
+      const loadout = this.createLoadout(entry, unitName);
+      if (loadout && !unit.loadouts.some(l => l.id === loadout.id)) {
+        unit.loadouts.push(loadout);
       }
-
-      // Add wargear options for characters
-      if (['epicHeroes', 'characters'].includes(category)) {
-        unit.wargearOptions = [
-          {
-            id: 'relic-weapon',
-            name: 'Relic Weapon',
-            points: 10
-          },
-          {
-            id: 'digital-weapons',
-            name: 'Digital Weapons',
-            points: 5
-          }
-        ];
-      }
-
-      units[category].push(unit);
     });
 
     return {
@@ -284,6 +267,284 @@ class BSDataParser {
       color: factionInfo.color,
       units
     };
+  }
+
+  private getBaseUnitName(unitName: string): string {
+    // Remove common weapon suffixes to get base unit name
+    const weaponSuffixes = [
+      ' with bolt rifles',
+      ' with stalker bolt rifles', 
+      ' with auto bolt rifles',
+      ' with heavy bolt rifles',
+      ' with assault bolt rifles',
+      ' with plasma incinerators',
+      ' with melta rifles',
+      ' with heavy plasma incinerators'
+    ];
+    
+    let baseName = unitName;
+    for (const suffix of weaponSuffixes) {
+      if (baseName.toLowerCase().includes(suffix)) {
+        baseName = baseName.replace(new RegExp(suffix, 'gi'), '');
+        break;
+      }
+    }
+    
+    return baseName.trim();
+  }
+
+  private determineUnitCategory(entry: Element, unitName: string): keyof ParsedFaction['units'] {
+    // Check for Epic Heroes first
+    const categoryLinks = entry.querySelectorAll('categoryLink');
+    let isEpicHero = false;
+    let category: keyof ParsedFaction['units'] = 'troops'; // default
+
+    categoryLinks.forEach(catLink => {
+      const catName = catLink.getAttribute('name');
+      if (catName === 'Epic Heroes') {
+        isEpicHero = true;
+        category = 'epicHeroes';
+      } else if (catName && CATEGORY_MAPPINGS[catName] && !isEpicHero) {
+        category = CATEGORY_MAPPINGS[catName];
+      }
+    });
+
+    // Character detection for non-epic heroes
+    if (!isEpicHero && this.isCharacterUnit(unitName)) {
+      category = 'characters';
+    }
+
+    return category;
+  }
+
+  private isCharacterUnit(unitName: string): boolean {
+    const characterKeywords = [
+      'captain', 'chaplain', 'librarian', 'lieutenant', 'techmarine', 
+      'apothecary', 'ancient', 'champion', 'judiciar', 'master', 'biologis'
+    ];
+    
+    return characterKeywords.some(keyword => 
+      unitName.toLowerCase().includes(keyword)
+    );
+  }
+
+  private extractStats(entry: Element): string {
+    const profiles = entry.querySelectorAll('profile[typeName="Unit"]');
+    if (profiles.length === 0) return 'No stats available';
+
+    const profile = profiles[0];
+    const characteristics = profile.querySelectorAll('characteristic');
+    const stats: string[] = [];
+
+    characteristics.forEach(char => {
+      const name = char.getAttribute('name');
+      const value = char.getAttribute('value') || char.textContent?.trim() || '-';
+      
+      if (name) {
+        // Map characteristic names to short forms
+        const shortName = this.getStatShortName(name);
+        if (shortName) {
+          stats.push(`${shortName}${value}`);
+        }
+      }
+    });
+
+    return stats.length > 0 ? stats.join(' ') : 'No stats available';
+  }
+
+  private getStatShortName(name: string): string | null {
+    const mapping: Record<string, string> = {
+      'Movement': 'M',
+      'M': 'M', 
+      'Weapon Skill': 'WS',
+      'WS': 'WS',
+      'Ballistic Skill': 'BS', 
+      'BS': 'BS',
+      'Strength': 'S',
+      'S': 'S',
+      'Toughness': 'T',
+      'T': 'T', 
+      'Wounds': 'W',
+      'W': 'W',
+      'Attacks': 'A',
+      'A': 'A',
+      'Leadership': 'Ld',
+      'Ld': 'Ld',
+      'Save': 'Sv',
+      'Sv': 'Sv'
+    };
+    
+    return mapping[name] || null;
+  }
+
+  private extractPoints(entry: Element): { base: number; minSize?: number; maxSize?: number; unitCost?: number } {
+    const costs = entry.querySelectorAll('cost');
+    let basePoints = 0;
+    
+    costs.forEach(cost => {
+      const name = cost.getAttribute('name');
+      const value = parseFloat(cost.getAttribute('value') || '0');
+      
+      if (name === 'pts' || name === 'points') {
+        basePoints = value;
+      }
+    });
+
+    // Try to extract squad size from constraints
+    const constraints = entry.querySelectorAll('constraint');
+    let minSize: number | undefined;
+    let maxSize: number | undefined;
+    let unitCost: number | undefined;
+
+    constraints.forEach(constraint => {
+      const type = constraint.getAttribute('type');
+      const value = parseFloat(constraint.getAttribute('value') || '0');
+      
+      if (type === 'min') {
+        minSize = value;
+      } else if (type === 'max') {
+        maxSize = value;
+      }
+    });
+
+    // Calculate per-model cost if it's a squad
+    if (minSize && minSize > 1 && basePoints > 0) {
+      unitCost = Math.round(basePoints / minSize);
+    }
+
+    return {
+      base: basePoints || 0,
+      minSize,
+      maxSize,
+      unitCost
+    };
+  }
+
+  private extractAbilities(entry: Element): string[] {
+    const abilities: string[] = [];
+    const rules = entry.querySelectorAll('rule');
+    
+    rules.forEach(rule => {
+      const name = rule.getAttribute('name');
+      if (name) {
+        abilities.push(name);
+      }
+    });
+
+    return abilities.length > 0 ? abilities : ['No special abilities'];
+  }
+
+  private extractKeywords(entry: Element): string[] {
+    const keywords: string[] = [];
+    const categoryLinks = entry.querySelectorAll('categoryLink');
+    
+    categoryLinks.forEach(catLink => {
+      const name = catLink.getAttribute('name');
+      if (name && !CATEGORY_MAPPINGS[name] && name !== 'Epic Heroes') {
+        keywords.push(name);
+      }
+    });
+
+    return keywords;
+  }
+
+  private extractWargearOptions(entry: Element): WargearOption[] {
+    const options: WargearOption[] = [];
+    const selectionEntryGroups = entry.querySelectorAll('selectionEntryGroup');
+    
+    selectionEntryGroups.forEach(group => {
+      const groupEntries = group.querySelectorAll('selectionEntry');
+      
+      groupEntries.forEach(optionEntry => {
+        const name = optionEntry.getAttribute('name');
+        if (name) {
+          const costs = optionEntry.querySelectorAll('cost');
+          let points = 0;
+          
+          costs.forEach(cost => {
+            const costName = cost.getAttribute('name');
+            if (costName === 'pts' || costName === 'points') {
+              points = parseFloat(cost.getAttribute('value') || '0');
+            }
+          });
+
+          options.push({
+            id: this.generateId(name),
+            name: name,
+            points: points
+          });
+        }
+      });
+    });
+
+    return options;
+  }
+
+  private createLoadout(entry: Element, unitName: string): Loadout | null {
+    const wargear: string[] = [];
+    
+    // Extract wargear from profiles
+    const weaponProfiles = entry.querySelectorAll('profile[typeName="Weapon"]');
+    weaponProfiles.forEach(profile => {
+      const weaponName = profile.getAttribute('name');
+      if (weaponName) {
+        wargear.push(weaponName);
+      }
+    });
+
+    // Extract from selection entries
+    const selections = entry.querySelectorAll('selectionEntry');
+    selections.forEach(selection => {
+      const name = selection.getAttribute('name');
+      if (name && this.isWargearItem(name)) {
+        wargear.push(name);
+      }
+    });
+
+    if (wargear.length === 0) {
+      wargear.push('Standard Equipment');
+    }
+
+    // Create loadout name based on primary weapon or unit variant
+    const loadoutName = this.generateLoadoutName(unitName, wargear);
+
+    return {
+      id: this.generateId(loadoutName),
+      name: loadoutName,
+      wargear: wargear
+    };
+  }
+
+  private isWargearItem(name: string): boolean {
+    const wargearKeywords = [
+      'bolt', 'plasma', 'melta', 'flamer', 'rifle', 'pistol', 'sword', 
+      'hammer', 'axe', 'shield', 'armour', 'grenade', 'launcher'
+    ];
+    
+    return wargearKeywords.some(keyword => 
+      name.toLowerCase().includes(keyword)
+    );
+  }
+
+  private generateLoadoutName(unitName: string, wargear: string[]): string {
+    // Try to use the primary weapon as loadout name
+    const primaryWeapon = wargear.find(w => 
+      w.toLowerCase().includes('rifle') || 
+      w.toLowerCase().includes('cannon') ||
+      w.toLowerCase().includes('launcher')
+    );
+    
+    if (primaryWeapon) {
+      return primaryWeapon;
+    }
+    
+    // If unit name has weapon info, extract it
+    const weaponMatch = unitName.match(/with (.+)$/);
+    if (weaponMatch) {
+      return weaponMatch[1];
+    }
+    
+    return 'Standard Loadout';
   }
 
   private generateId(name: string): string {

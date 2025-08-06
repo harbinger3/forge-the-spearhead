@@ -4,6 +4,7 @@
  */
 
 import { bsDataParser, type ParsedFaction } from './bsDataParser';
+import { munitiorumParser } from './munitiorumParser';
 import { fallbackFactions } from '@/data/fallbackFactions';
 
 class FactionDataService {
@@ -38,10 +39,11 @@ class FactionDataService {
 
   private async performLoad(): Promise<void> {
     try {
-      console.log('Loading faction data from BSData...');
+      console.log('Loading faction data from Munitorum Field Manual...');
       const startTime = Date.now();
       
-      this.factionData = await bsDataParser.parseAllFactions();
+      // Use Munitorum Field Manual data instead of BSData
+      this.factionData = munitiorumParser.getAllFactions();
       
       const loadTime = Date.now() - startTime;
       console.log(`Faction data loaded in ${loadTime}ms`);
@@ -57,13 +59,9 @@ class FactionDataService {
       }
     } catch (error) {
       console.error('Failed to load faction data:', error);
-      // Try to load from cache as fallback
-      this.loadFromCache();
-      // If cache also fails, use fallback data
-      if (Object.keys(this.factionData).length === 0) {
-        console.log('Using fallback faction data');
-        this.factionData = fallbackFactions;
-      }
+      // If loading fails, use fallback data
+      console.log('Using fallback faction data');
+      this.factionData = fallbackFactions;
     }
   }
 

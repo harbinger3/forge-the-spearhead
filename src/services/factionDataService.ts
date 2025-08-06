@@ -72,11 +72,9 @@ class FactionDataService {
       const cached = localStorage.getItem('wh40k-faction-data');
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        // Use cached data if it's less than 24 hours old
-        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-          this.factionData = data;
-          console.log('Loaded faction data from cache');
-        }
+        // Force refresh - clear cache to load updated faction mappings
+        console.log('Clearing cached faction data to load updated mappings');
+        localStorage.removeItem('wh40k-faction-data');
       }
     } catch (error) {
       console.warn('Failed to load from cache:', error);

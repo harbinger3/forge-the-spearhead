@@ -61,7 +61,7 @@ const FACTION_MAPPINGS: Record<string, { name: string; color: string; id: string
     color: 'secondary', 
     id: 'astra-militarum' 
   },
-  'Imperium - Custodes.cat': { 
+  'Imperium - Adeptus Custodes.cat': { 
     name: 'Adeptus Custodes', 
     color: 'default', 
     id: 'custodes' 
@@ -71,20 +71,80 @@ const FACTION_MAPPINGS: Record<string, { name: string; color: string; id: string
     color: 'outline', 
     id: 'grey-knights' 
   },
-  'Imperium - Imperial Agents.cat': { 
-    name: 'Imperial Agents', 
+  'Imperium - Agents of the Imperium.cat': { 
+    name: 'Agents of the Imperium', 
     color: 'secondary', 
-    id: 'imperial-agents' 
+    id: 'agents-imperium' 
   },
   'Imperium - Imperial Knights.cat': { 
     name: 'Imperial Knights', 
     color: 'accent', 
     id: 'imperial-knights' 
   },
-  'Imperium - Sisters of Battle.cat': { 
-    name: 'Sisters of Battle', 
+  'Imperium - Adepta Sororitas.cat': { 
+    name: 'Adepta Sororitas', 
     color: 'destructive', 
-    id: 'sisters-of-battle' 
+    id: 'adepta-sororitas' 
+  },
+  'Imperium - Adeptus Mechanicus.cat': {
+    name: 'Adeptus Mechanicus',
+    color: 'destructive',
+    id: 'adeptus-mechanicus'
+  },
+  'Imperium - Black Templars.cat': {
+    name: 'Black Templars',
+    color: 'default',
+    id: 'black-templars'
+  },
+  'Imperium - Blood Angels.cat': {
+    name: 'Blood Angels',
+    color: 'destructive',
+    id: 'blood-angels'
+  },
+  'Imperium - Dark Angels.cat': {
+    name: 'Dark Angels',
+    color: 'secondary',
+    id: 'dark-angels'
+  },
+  'Imperium - Deathwatch.cat': {
+    name: 'Deathwatch',
+    color: 'default',
+    id: 'deathwatch'
+  },
+  'Imperium - Imperial Fists.cat': {
+    name: 'Imperial Fists',
+    color: 'accent',
+    id: 'imperial-fists'
+  },
+  'Imperium - Iron Hands.cat': {
+    name: 'Iron Hands',
+    color: 'default',
+    id: 'iron-hands'
+  },
+  'Imperium - Raven Guard.cat': {
+    name: 'Raven Guard',
+    color: 'default',
+    id: 'raven-guard'
+  },
+  'Imperium - Salamanders.cat': {
+    name: 'Salamanders',
+    color: 'accent',
+    id: 'salamanders'
+  },
+  'Imperium - Space Wolves.cat': {
+    name: 'Space Wolves',
+    color: 'secondary',
+    id: 'space-wolves'
+  },
+  'Imperium - Ultramarines.cat': {
+    name: 'Ultramarines',
+    color: 'accent',
+    id: 'ultramarines'
+  },
+  'Imperium - White Scars.cat': {
+    name: 'White Scars',
+    color: 'accent',
+    id: 'white-scars'
   },
   'Chaos - Chaos Knights.cat': { 
     name: 'Chaos Knights', 
@@ -111,50 +171,65 @@ const FACTION_MAPPINGS: Record<string, { name: string; color: string; id: string
     color: 'destructive', 
     id: 'world-eaters' 
   },
-  'Chaos - Daemons.cat': { 
+  'Chaos - Chaos Daemons.cat': { 
     name: 'Chaos Daemons', 
     color: 'destructive', 
     id: 'chaos-daemons' 
   },
-  'Xenos - Aeldari.cat': { 
-    name: 'Aeldari', 
-    color: 'accent', 
-    id: 'aeldari' 
+  'Chaos - Emperor\'s Children.cat': {
+    name: 'Emperor\'s Children',
+    color: 'destructive',
+    id: 'emperors-children'
   },
-  'Xenos - Drukhari.cat': { 
+  'Aeldari - Craftworlds.cat': { 
+    name: 'Aeldari - Craftworlds', 
+    color: 'accent', 
+    id: 'aeldari-craftworlds' 
+  },
+  'Aeldari - Drukhari.cat': { 
     name: 'Drukhari', 
     color: 'destructive', 
     id: 'drukhari' 
   },
-  'Xenos - Necrons.cat': { 
+  'Aeldari - Ynnari.cat': {
+    name: 'Ynnari',
+    color: 'accent',
+    id: 'ynnari'
+  },
+  'Necrons.cat': { 
     name: 'Necrons', 
     color: 'secondary', 
     id: 'necrons' 
   },
-  'Xenos - Orks.cat': { 
+  'Orks.cat': { 
     name: 'Orks', 
     color: 'destructive', 
     id: 'orks' 
   },
-  'Xenos - Tau Empire.cat': { 
+  'T\'au Empire.cat': { 
     name: 'T\'au Empire', 
     color: 'accent', 
     id: 'tau-empire' 
   },
-  'Xenos - Tyranids.cat': { 
+  'Tyranids.cat': { 
     name: 'Tyranids', 
     color: 'destructive', 
     id: 'tyranids' 
   },
-  'Xenos - Genestealer Cults.cat': { 
+  'Genestealer Cults.cat': { 
     name: 'Genestealer Cults', 
     color: 'destructive', 
     id: 'genestealer-cults' 
   },
-  'Xenos - Leagues of Votann.cat': { 
+  'Leagues of Votann.cat': { 
     name: 'Leagues of Votann', 
     color: 'secondary', 
     id: 'leagues-of-votann' 
+  },
+  'Unaligned Forces.cat': {
+    name: 'Unaligned Forces',
+    color: 'outline',
+    id: 'unaligned-forces'
   }
 };
 
@@ -192,6 +267,7 @@ class BSDataParser {
   }
 
   extractUnitsFromDOM(xmlDoc: Document, factionInfo: { name: string; color: string; id: string }): ParsedFaction {
+    // Return faction with empty units array - bypassing unit parsing as requested
     const units: ParsedFaction['units'] = {
       epicHeroes: [],
       characters: [],
@@ -203,63 +279,6 @@ class BSDataParser {
       transport: [],
       fortification: []
     };
-
-    // Get all selection entries (the actual unit definitions)
-    const selectionEntries = xmlDoc.querySelectorAll('selectionEntry');
-    const unitMap = new Map<string, ParsedUnit>();
-
-    selectionEntries.forEach(entry => {
-      const unitName = entry.getAttribute('name');
-      if (!unitName || unitName.includes('[Legends]')) return;
-
-      // Get the base unit name (remove weapon variations)
-      const baseUnitName = this.getBaseUnitName(unitName);
-      const unitId = this.generateId(baseUnitName);
-
-      // Determine category
-      const category = this.determineUnitCategory(entry, unitName);
-      
-      // Check if we already have this base unit
-      let unit = unitMap.get(unitId);
-      
-      if (!unit) {
-        // Create new unit
-        const stats = this.extractStats(entry);
-        const points = this.extractPoints(entry);
-        
-        unit = {
-          id: unitId,
-          name: baseUnitName,
-          points: points.base,
-          stats: stats,
-          wargear: [],
-          abilities: this.extractAbilities(entry),
-          keywords: this.extractKeywords(entry),
-          loadouts: []
-        };
-
-        // Add squad size for non-character units
-        if (!['epicHeroes', 'characters'].includes(category)) {
-          unit.minSize = points.minSize || 5;
-          unit.maxSize = points.maxSize || 10;
-          unit.unitCost = points.unitCost || 20;
-        }
-
-        // Add wargear options for characters
-        if (['epicHeroes', 'characters'].includes(category)) {
-          unit.wargearOptions = this.extractWargearOptions(entry);
-        }
-
-        unitMap.set(unitId, unit);
-        units[category].push(unit);
-      }
-
-      // Add loadout for this variant
-      const loadout = this.createLoadout(entry, unitName);
-      if (loadout && !unit.loadouts.some(l => l.id === loadout.id)) {
-        unit.loadouts.push(loadout);
-      }
-    });
 
     return {
       id: factionInfo.id,
